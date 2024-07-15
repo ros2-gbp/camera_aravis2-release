@@ -1,0 +1,12 @@
+Source: ros-humble-camera-aravis2
+Section: misc
+Priority: optional
+Maintainer: Boitumelo Ruf <boitumelo.ruf@iosb.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), libaravis-dev, libglib2.0-dev, ros-humble-ament-cmake, ros-humble-ament-lint-auto <!nocheck>, ros-humble-ament-lint-common <!nocheck>, ros-humble-camera-aravis2-msgs, ros-humble-camera-info-manager, ros-humble-cv-bridge, ros-humble-diagnostic-msgs, ros-humble-image-transport, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-camera-aravis2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-camera-aravis2-msgs, ros-humble-camera-info-manager, ros-humble-cv-bridge, ros-humble-diagnostic-msgs, ros-humble-image-transport, ros-humble-rclcpp, ros-humble-rclcpp-components, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-ros-workspace
+Description: ROS2 camera driver for [GenICam](https://www.emva.org/standards-technology/genicam/)-based GigEVision and USB3Vision cameras.
