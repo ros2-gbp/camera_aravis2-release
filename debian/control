@@ -1,0 +1,12 @@
+Source: ros-iron-camera-aravis2
+Section: misc
+Priority: optional
+Maintainer: Boitumelo Ruf <boitumelo.ruf@iosb.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), libaravis-dev, libglib2.0-dev, ros-iron-ament-cmake, ros-iron-ament-lint-auto <!nocheck>, ros-iron-ament-lint-common <!nocheck>, ros-iron-camera-aravis2-msgs, ros-iron-camera-info-manager, ros-iron-cv-bridge, ros-iron-diagnostic-msgs, ros-iron-image-transport, ros-iron-rclcpp, ros-iron-rclcpp-components, ros-iron-sensor-msgs, ros-iron-std-msgs, ros-iron-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-iron-camera-aravis2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-iron-camera-aravis2-msgs, ros-iron-camera-info-manager, ros-iron-cv-bridge, ros-iron-diagnostic-msgs, ros-iron-image-transport, ros-iron-rclcpp, ros-iron-rclcpp-components, ros-iron-sensor-msgs, ros-iron-std-msgs, ros-iron-ros-workspace
+Description: ROS2 camera driver for [GenICam](https://www.emva.org/standards-technology/genicam/)-based GigEVision and USB3Vision cameras.
