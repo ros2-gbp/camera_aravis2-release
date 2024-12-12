@@ -60,19 +60,19 @@ class CameraXmlExporter : public CameraAravisNodeBase
      */
     virtual ~CameraXmlExporter();
 
-  protected:
-    /**
-     * @overload
-     * @brief Set the up launch parameters.
-     */
-    void setUpParameters() override;
-
     /**
      * @brief Export XML data from camera and write to file.
      *
      * @return True if successful. False, otherwise.
      */
-    [[nodiscard]] bool export_xml_data_to_file();
+    [[nodiscard]] bool exportXmlDataToFile();
+
+  protected:
+    /**
+     * @overload
+     * @brief Set the up launch parameters.
+     */
+    void setupParameters() override;
 
     //--- MEMBER DECLARATION ---//
 
