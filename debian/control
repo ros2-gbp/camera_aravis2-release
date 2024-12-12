@@ -1,0 +1,12 @@
+Source: ros-humble-camera-aravis2-msgs
+Section: misc
+Priority: optional
+Maintainer: Raphael Hagmanns <raphael.hagmanns@iosb.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-humble-ament-cmake, ros-humble-builtin-interfaces, ros-humble-diagnostic-msgs, ros-humble-rosidl-default-generators, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-ros-workspace, ros-humble-rosidl-typesupport-fastrtps-c, ros-humble-rosidl-typesupport-fastrtps-cpp
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-humble-camera-aravis2-msgs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-builtin-interfaces, ros-humble-diagnostic-msgs, ros-humble-rosidl-default-runtime, ros-humble-sensor-msgs, ros-humble-std-msgs, ros-humble-ros-workspace
+Description: Messages and service definitions for the camera_aravis2 package.
