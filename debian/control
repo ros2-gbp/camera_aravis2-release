@@ -1,0 +1,12 @@
+Source: ros-jazzy-camera-aravis2
+Section: misc
+Priority: optional
+Maintainer: Raphael Hagmanns <raphael.hagmanns@iosb.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), libaravis-dev, libglib2.0-dev, ros-jazzy-ament-cmake, ros-jazzy-ament-lint-auto <!nocheck>, ros-jazzy-ament-lint-common <!nocheck>, ros-jazzy-camera-aravis2-msgs, ros-jazzy-camera-info-manager, ros-jazzy-cv-bridge, ros-jazzy-diagnostic-msgs, ros-jazzy-image-transport, ros-jazzy-rclcpp, ros-jazzy-rclcpp-components, ros-jazzy-sensor-msgs, ros-jazzy-std-msgs, ros-jazzy-ros-workspace
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-camera-aravis2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-jazzy-camera-aravis2-msgs, ros-jazzy-camera-info-manager, ros-jazzy-cv-bridge, ros-jazzy-diagnostic-msgs, ros-jazzy-image-transport, ros-jazzy-rclcpp, ros-jazzy-rclcpp-components, ros-jazzy-sensor-msgs, ros-jazzy-std-msgs, ros-jazzy-ros-workspace
+Description: ROS2 camera driver for [GenICam](https://www.emva.org/standards-technology/genicam/)-based GigEVision and USB3Vision cameras.
