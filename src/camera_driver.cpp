@@ -274,6 +274,21 @@ bool CameraDriver::setupCameraStreamStructs()
 }
 
 //==================================================================================================
+void CameraDriver::filterParameterListNames(
+  std::vector<std::pair<std::string, rclcpp::ParameterValue>>& parameter_list)
+{
+    int number;
+    char new_name[100];
+    for (auto& param : parameter_list)
+    {
+        if (sscanf(param.first.c_str(), "#%d_%s", &number, new_name) < 2)
+            continue;
+
+        param.first = std::string(new_name);
+    }
+}
+
+//==================================================================================================
 [[nodiscard]] bool CameraDriver::getDeviceControlParameterList(
   const std::string& param_name,
   std::vector<std::pair<std::string, rclcpp::ParameterValue>>& param_values) const
@@ -335,7 +350,10 @@ bool CameraDriver::setupCameraStreamStructs()
     is_parameter_set = getTransportLayerControlParameterList(tmp_feature_name,
                                                              tmp_param_values);
     if (is_parameter_set)
+    {
+        filterParameterListNames(tmp_param_values);
         setFeatureValuesFromParameterList(tmp_param_values);
+    }
 
     //--- set technology specific transport layer controls
     isSuccessful &= setTechSpecificTlControlSettings();
@@ -347,7 +365,10 @@ bool CameraDriver::setupCameraStreamStructs()
     is_parameter_set = getTransportLayerControlParameterList(tmp_feature_name,
                                                              tmp_param_values);
     if (is_parameter_set)
+    {
+        filterParameterListNames(tmp_param_values);
         setFeatureValuesFromParameterList(tmp_param_values);
+    }
 
     return isSuccessful;
 }
@@ -405,7 +426,10 @@ bool CameraDriver::setupCameraStreamStructs()
         is_parameter_set = getImageFormatControlParameterList(tmp_feature_name,
                                                               tmp_param_values);
         if (is_parameter_set)
+        {
+            filterParameterListNames(tmp_param_values);
             setFeatureValuesFromParameterList(tmp_param_values, i);
+        }
 
         //--- for specific parameters, proceed as follows:
         //---   1. Check and read parameter from launch parameters
@@ -609,7 +633,10 @@ bool CameraDriver::setupCameraStreamStructs()
         is_parameter_set = getImageFormatControlParameterList(tmp_feature_name,
                                                               tmp_param_values);
         if (is_parameter_set)
+        {
+            filterParameterListNames(tmp_param_values);
             setFeatureValuesFromParameterList(tmp_param_values, i);
+        }
 
         // NOTE: Not all parameters are essential, which is why only the success of some parameters
         // are checked.
@@ -670,7 +697,10 @@ bool CameraDriver::setupCameraStreamStructs()
         is_parameter_set = getAcquisitionControlParameterList(tmp_feature_name,
                                                               tmp_param_values);
         if (is_parameter_set)
+        {
+            filterParameterListNames(tmp_param_values);
             setFeatureValuesFromParameterList(tmp_param_values, i);
+        }
 
         //--- for specific parameters, proceed as follows:
         //---   1. Check and read parameter from launch parameters
@@ -811,7 +841,10 @@ bool CameraDriver::setupCameraStreamStructs()
         is_parameter_set = getAcquisitionControlParameterList(tmp_feature_name,
                                                               tmp_param_values);
         if (is_parameter_set)
+        {
+            filterParameterListNames(tmp_param_values);
             setFeatureValuesFromParameterList(tmp_param_values, i);
+        }
     }
 
     return true;
@@ -866,7 +899,10 @@ bool CameraDriver::setupCameraStreamStructs()
         is_parameter_set = getAnalogControlParameterList(tmp_feature_name,
                                                          tmp_param_values);
         if (is_parameter_set)
+        {
+            filterParameterListNames(tmp_param_values);
             setFeatureValuesFromParameterList(tmp_param_values, i);
+        }
 
         //--- for specific auto parameters, proceed as follows:
         //---   1. Check and read parameter from launch parameters
@@ -1032,7 +1068,10 @@ bool CameraDriver::setupCameraStreamStructs()
         is_parameter_set = getAnalogControlParameterList(tmp_feature_name,
                                                          tmp_param_values);
         if (is_parameter_set)
+        {
+            filterParameterListNames(tmp_param_values);
             setFeatureValuesFromParameterList(tmp_param_values, i);
+        }
     }
 
     return true;
