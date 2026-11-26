@@ -29,6 +29,7 @@
 #include "camera_aravis2/camera_driver.h"
 
 // ROS
+#include <image_transport/camera_common.hpp>
 #include <rcl_interfaces/msg/floating_point_range.hpp>
 #include <rcl_interfaces/msg/integer_range.hpp>
 #include <rclcpp/time.hpp>
@@ -49,6 +50,7 @@ CameraDriver::CameraDriver(const std::string& name, const rclcpp::NodeOptions& o
   is_spawning_(false),
   p_white_balance_srv_(nullptr),
   p_parameter_callback_handle_(nullptr),
+  timestamp_offset_(0.0),
   is_diagnostics_published_(false),
   p_diagnostic_pub_(nullptr),
   current_num_subscribers_(0)
@@ -136,6 +138,12 @@ void CameraDriver::setupParameters()
     verbose_desc.description =
       "Activate verbose output.";
     declare_parameter<bool>("verbose", false, verbose_desc);
+
+    auto timestamp_offset_desc = rcl_interfaces::msg::ParameterDescriptor{};
+    timestamp_offset_desc.description =
+      "Offset in seconds added to the timestamp of the published image messages.";
+    declare_parameter<double>("timestamp_offset", 0.0, timestamp_offset_desc);
+    timestamp_offset_ = get_parameter("timestamp_offset").as_double();
 
     //--- register parameter change callback
     p_parameter_callback_handle_ = add_on_set_parameters_callback(
@@ -241,17 +249,21 @@ bool CameraDriver::setupCameraStreamStructs()
             topic_name += "/" + stream.name;
         topic_name += "/image_raw";
 
-#ifndef WITH_MATCHED_EVENTS
-        stream.camera_pub = image_transport::create_camera_publisher(this, topic_name);
-#else
         rclcpp::PublisherOptions pub_options;
+#ifndef WITH_MATCHED_EVENTS
+        stream.image_pub = image_transport::create_publisher(this, topic_name);
+#else
         pub_options.event_callbacks.matched_callback =
-          std::bind(&CameraDriver::handleMessageSubscriptionChange, this,
-                    std::placeholders::_1);
-        stream.camera_pub =
-          image_transport::create_camera_publisher(this, topic_name,
-                                                   rmw_qos_profile_default, pub_options);
+          [this](rclcpp::MatchedInfo&) { handleMessageSubscriptionChange(); };
+        stream.image_pub =
+          image_transport::create_publisher(this, topic_name,
+                                            rmw_qos_profile_default, pub_options);
 #endif
+
+        //--- camera_info is published by a separate publisher, so that its subscribers trigger
+        //--- the matched event as well. The image_transport::CameraPublisher does not support that.
+        stream.p_camera_info_pub = this->create_publisher<sensor_msgs::msg::CameraInfo>(
+          image_transport::getCameraInfoTopic(stream.image_pub.getTopic()), 10, pub_options);
 
         //--- initialize camera_info manager
         // NOTE: Previously, separate node handles where used for CameraInfoManagers in case of a
@@ -752,6 +764,21 @@ void CameraDriver::filterParameterListNames(
         if (is_parameter_set)
             setFeatureValueFromParameter<std::string>(tmp_feature_name, tmp_param_value, i);
         getFeatureValue<std::string>(tmp_feature_name, acq_ctrl.exposure_mode);
+        //--- if the camera does not provide 'ExposureMode', assume 'Timed' (see #60)
+        {
+            GuardedGError err_exp_mode;
+            bool is_query_successful = true;
+            const bool is_exposure_mode_available =
+              arv_device_is_feature_available(p_device_, tmp_feature_name.c_str(),
+                                              err_exp_mode.ref());
+            CHECK_SUCCESS_GERROR(err_exp_mode, logger_, is_query_successful)
+            if (is_query_successful && !is_exposure_mode_available)
+            {
+                acq_ctrl.exposure_mode = "Timed";
+                RCLCPP_INFO(logger_, "Stream %i: '%s' is not available. Assuming 'Timed'.", i,
+                            tmp_feature_name.c_str());
+            }
+        }
         if (is_parameter_set &&
             !isParameterValueEqualTo<std::string>(tmp_param_value, acq_ctrl.exposure_mode, i))
             config_warn_msgs_.push_back("Stream " + std::to_string(i) + ": " +
@@ -1089,52 +1116,51 @@ bool CameraDriver::initializeServices()
     return true;
 }
 
-#ifdef WITH_MATCHED_EVENTS
 //==================================================================================================
-void CameraDriver::handleMessageSubscriptionChange(rclcpp::MatchedInfo& iEventInfo)
+void CameraDriver::handleMessageSubscriptionChange()
 {
     GuardedGError err;
 
+    std::lock_guard<std::mutex> lock(acquisition_mutex_);
+
     //--- evaluate whether to start or stop acquisition only if device is available and if the
-    //--- node is initialized.
-    if (p_device_ && this->is_initialized_)
-    {
-        //--- if the new subscriber count of the matched event is greater than 0 and if there were
-        //--- no subscriber so far, start acquisition
-        if (iEventInfo.current_count > 0 && current_num_subscribers_ == 0)
-        {
-            RCLCPP_INFO(logger_, "|-> Acquisition start.");
-
-            arv_device_execute_command(p_device_, "AcquisitionStart", err.ref());
-            CHECK_GERROR_MSG(err, logger_, "In executing 'AcquisitionStart'.");
-        }
-        //--- if the new subscriber count of the matched event is equal to 0 and if there were
-        //--- subscribers until now, stop acquisition
-        else if (iEventInfo.current_count == 0 && current_num_subscribers_ > 0)
-        {
-            RCLCPP_INFO(logger_, "->| Acquisition stop.");
-
-            arv_device_execute_command(p_device_, "AcquisitionStop", err.ref());
-            CHECK_GERROR_MSG(err, logger_, "In executing 'AcquisitionStop'.");
-        }
-    }
-    else
-    {
-        RCLCPP_WARN(logger_, "Subscription change detected but no action taken. "
-                             "Reason: p_device_ is NULL or node is not initialized.");
+    //--- node is initialized. Subscribers that connect earlier are considered at the end of the
+    //--- initialization.
+    if (!p_device_ || !this->is_initialized_)
         return;
+
+#ifdef WITH_MATCHED_EVENTS
+    //--- get the maximum number of image and camera_info subscribers over all streams
+    size_t new_num_subscribers = 0;
+    for (const Stream& stream : streams_)
+        new_num_subscribers =
+          std::max({new_num_subscribers, stream.image_pub.getNumSubscribers(),
+                    stream.p_camera_info_pub->get_subscription_count()});
+#else
+    //--- without matched events the acquisition is always kept running
+    const size_t new_num_subscribers = 1;
+#endif
+
+    //--- if there are subscribers now and there were none before, start acquisition
+    if (new_num_subscribers > 0 && current_num_subscribers_ == 0)
+    {
+        RCLCPP_INFO(logger_, "|-> Acquisition start.");
+
+        arv_device_execute_command(p_device_, "AcquisitionStart", err.ref());
+        CHECK_GERROR_MSG(err, logger_, "In executing 'AcquisitionStart'.");
+    }
+    //--- if there are no subscribers now and there were subscribers before, stop
+    //--- acquisition
+    else if (new_num_subscribers == 0 && current_num_subscribers_ > 0)
+    {
+        RCLCPP_INFO(logger_, "->| Acquisition stop.");
+
+        arv_device_execute_command(p_device_, "AcquisitionStop", err.ref());
+        CHECK_GERROR_MSG(err, logger_, "In executing 'AcquisitionStop'.");
     }
 
-    //--- get the maximum number of subscribers over all streams and assign to the member variable
-    current_num_subscribers_ = 0;
-    for (uint i = 0; i < streams_.size(); ++i)
-    {
-        current_num_subscribers_ =
-          std::max(static_cast<int>(streams_[i].camera_pub.getNumSubscribers()),
-                   current_num_subscribers_);
-    }
+    current_num_subscribers_ = static_cast<int>(new_num_subscribers);
 }
-#endif
 
 //==================================================================================================
 void CameraDriver::setupDynamicParameters()
@@ -1355,6 +1381,11 @@ rcl_interfaces::msg::SetParametersResult CameraDriver::handleDynamicParameterCha
         if (param_name == "verbose")
         {
             is_verbose_enable_ = param.as_bool();
+        }
+        //--- timestamp offset
+        else if (param_name == "timestamp_offset")
+        {
+            timestamp_offset_ = param.as_double();
         }
         //--- dynamic camera parameters, check if parameter name is in list of specified dynamic
         //--- parameters
@@ -1736,23 +1767,13 @@ void CameraDriver::spawnCameraStreams()
     RCLCPP_INFO(logger_, "  Num. Streams:  (%i / %i)",
                 num_opened_streams, static_cast<int>(streams_.size()));
 
-#ifndef WITH_MATCHED_EVENTS
-    //--- If matched events are not available, the number of subscribers are not dynamically
-    //--- changed. Thus, set number of subscribers to 1 in order for the acquisition to be started
-    //--- below.
-    current_num_subscribers_ = 1;
-#endif
-
-    //--- When there are already subscribers to the image topic, start acquisition.
-    if (current_num_subscribers_ > 0)
     {
-        RCLCPP_INFO(logger_, "|-> Acquisition start at initialization.");
-
-        arv_device_execute_command(p_device_, "AcquisitionStart", err.ref());
-        CHECK_GERROR_MSG(err, logger_, "In executing 'AcquisitionStart'.");
+        std::lock_guard<std::mutex> lock(acquisition_mutex_);
+        this->is_initialized_ = true;
     }
 
-    this->is_initialized_ = true;
+    //--- When there are already subscribers, start acquisition.
+    handleMessageSubscriptionChange();
 }
 
 //==================================================================================================
@@ -1804,7 +1825,8 @@ void CameraDriver::processStreamBuffer(const uint stream_id)
         fillCameraInfoMsg(stream, p_img_msg);
 
         //--- publish
-        stream.camera_pub.publish(p_img_msg, stream.p_cam_info_msg);
+        stream.image_pub.publish(*p_img_msg);
+        stream.p_camera_info_pub->publish(*stream.p_cam_info_msg);
 
         //--- do post frame processing
         postFrameProcessingCallback(stream_id);
@@ -1866,6 +1888,10 @@ void CameraDriver::fillImageMsgMetadata(sensor_msgs::msg::Image::SharedPtr& p_im
 
     if (!isBufferTimestampSet)
         p_img_msg->header.stamp = rclcpp::Time(arv_buffer_get_system_timestamp(p_buffer));
+
+    //--- apply timestamp offset
+    p_img_msg->header.stamp = rclcpp::Time(p_img_msg->header.stamp) +
+                              rclcpp::Duration::from_seconds(timestamp_offset_);
     p_img_msg->header.frame_id = sensor.frame_id;
 
     //--- fill image meta data
@@ -1974,7 +2000,9 @@ void CameraDriver::printCameraConfiguration() const
         {
             RCLCPP_INFO(logger_, "    Camera Info:         %s", STREAM.camera_info_url.c_str());
             RCLCPP_INFO(logger_, "    Topic:               %s",
-                        STREAM.camera_pub.getTopic().c_str());
+                        STREAM.image_pub.getTopic().c_str());
+            RCLCPP_INFO(logger_, "    Camera Info Topic:   %s",
+                        STREAM.p_camera_info_pub->get_topic_name());
             RCLCPP_INFO(logger_, "    Frame ID:            %s", SENSOR.frame_id.c_str());
         }
 

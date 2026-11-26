@@ -16,7 +16,16 @@
 
 set(ARAVIS_VERSION 0.8)
 
+# pkg-config results are only used as hints; a failed lookup must not affect the search below.
+find_package(PkgConfig QUIET)
+if(PKG_CONFIG_FOUND)
+  pkg_check_modules(PC_ARAVIS QUIET aravis-${ARAVIS_VERSION})
+endif()
+
 find_path(ARAVIS_INCLUDE_DIRS arv.h
+  HINTS
+  ${PC_ARAVIS_INCLUDE_DIRS}
+  ${PC_ARAVIS_INCLUDEDIR}
   PATHS
   "$ENV{ARAVIS_INCLUDE_PATH}"
   /usr/local/include/aravis-${ARAVIS_VERSION}
@@ -24,6 +33,9 @@ find_path(ARAVIS_INCLUDE_DIRS arv.h
 )
 
 find_library(ARAVIS_LIBRARIES aravis-${ARAVIS_VERSION}
+  HINTS
+  ${PC_ARAVIS_LIBRARY_DIRS}
+  ${PC_ARAVIS_LIBDIR}
   PATHS
   "$ENV{ARAVIS_LIBRARY}"
   /usr/local/lib
