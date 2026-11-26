@@ -4,7 +4,7 @@ An actively maintained ROS 2 camera driver for [GenICam](https://www.emva.org/st
 It is a subsequent development of [camera_aravis](https://github.com/FraunhoferIOSB/camera_aravis), but in order to clean up some legacy code and, in turn, support new features mor easily, we opted to implement it with a new code-base. 
 It is open sourced under the 3-clause BSD license.
 
-It relies on the [Aravis](http://live.gnome.org/Aravis) library to access the GigEVision and USB3Vision cameras. 
+It relies on the [Aravis](https://github.com/aravisproject/aravis) library to access the GigEVision and USB3Vision cameras. 
 Aravis is a glib/gobject based library for video acquisition using GenICam cameras. 
 It currently implements the gigabit ethernet and USB3 protocols used by industrial cameras.
 
@@ -18,7 +18,7 @@ It currently implements the gigabit ethernet and USB3 protocols used by industri
 
 | Service    | devel  | main |
 | ---------- | ------- | ------ |
-| GitHub     | [![Humble Hawksbill](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml)<br>[![Iron Irwini](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml)<br>[![Jazzy Jalisco](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml)| [![Humble Hawksbill](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml)<br>[![Iron Irwini](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml)<br>[![Jazzy Jalisco](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml)|
+| GitHub     | [![Humble Hawksbill](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml)<br>[![Iron Irwini](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml)<br>[![Jazzy Jalisco](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml)<br>[![Kilted Kaiju](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_kilted.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_kilted.yml)<br>[![Lyrical Luth](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_lyrical.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_lyrical.yml)| [![Humble Hawksbill](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml)<br>[![Iron Irwini](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml)<br>[![Jazzy Jalisco](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml)<br>[![Kilted Kaiju](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_kilted.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_kilted.yml)<br>[![Lyrical Luth](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_lyrical.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_lyrical.yml)|
 
 ------------------------
 
@@ -85,6 +85,9 @@ monitored. See '[How to publish camera diagnostics / status](#how-to-publish-cam
 - ```diagnostic_publish_rate```: Rate (in Hz) at which to read and publish the diagnostic data.
 	- Type: double
 	- Default: 0.1 (every 10 seconds)
+- ```timestamp_offset```: Offset (in seconds) added to the timestamp of the published image and camera_info messages, e.g. to compensate a constant delay or clock offset between the camera and other sensors. Can be changed at runtime.
+	- Type: double
+	- Default: 0.0
 
 #### GenICam-Specific Parameters
 
@@ -95,14 +98,14 @@ If specified as launch parameter, camera_aravis2 will set the following features
 
 - `DeviceControl` (List): GenICam parameters of the 'DeviceControl' category that are to be set. Here, no specific order is implemented. Nested parameter list is evaluated in alphabetical order.
 - `TransportLayerControl`
-    - `BEGIN` (List): Additional GenICam parameters that are not be set at the beginning of the 'TransportLayerControl' section. Nested parameter list is evaluated in alphabetical order.
+    - `BEGIN` (List): Additional GenICam parameters that are to be set at the beginning of the 'TransportLayerControl' section. Nested parameter list is evaluated in alphabetical order.
     - `GevSCPSPacketSize` (Int) - *GigEVision Cameras only* : Specifies the packet size, in bytes, which are to be send. This should correspond 'DeviceStreamChannelPacketSize' and the maximum transport unit (MTU) of the interface.
     - `GevSCPD` (Int) - *GigEVision Cameras only* : Controls the delay (in GEV timestamp counter unit) to insert between
 each packet for this stream channel.
     - `PtpEnable` (Bool) - *GigEVision Cameras only* : Enables the Precision Time Protocol (PTP).
-    - `END` (List): Additional GenICam parameters that are not be set at the end of the 'TransportLayerControl' section. Nested parameter list is evaluated in alphabetical order.
+    - `END` (List): Additional GenICam parameters that are to be set at the end of the 'TransportLayerControl' section. Nested parameter list is evaluated in alphabetical order.
 - `ImageFormatControl`
-    - `BEGIN` (List): Additional GenICam parameters that are not be set at the beginning of the 'ImageFormatControl' section. Nested parameter list is evaluated in alphabetical order.
+    - `BEGIN` (List): Additional GenICam parameters that are to be set at the beginning of the 'ImageFormatControl' section. Nested parameter list is evaluated in alphabetical order.
     - `PixelFormat`* (String): Format of the pixels provided by the device.
     - `ReverseX`* (Bool): Flip horizontally the image sent by the device.
     - `ReverseY`* (Bool): Flip vertically the image sent by the device.
@@ -114,9 +117,9 @@ each packet for this stream channel.
     - `Height`* (Int): Height of the image provided by the device (in pixels).
     - `OffsetX`* (Int): Horizontal offset from the origin to the region of interest (in pixels).
     - `OffsetY`* (Int): Vertical offset from the origin to the region of interest (in pixels).
-    - `END` (List): Additional GenICam parameters that are not be set at the end of the 'ImageFormatControl' section. Nested parameter list is evaluated in alphabetical order.
+    - `END` (List): Additional GenICam parameters that are to be set at the end of the 'ImageFormatControl' section. Nested parameter list is evaluated in alphabetical order.
 - `AcquisitionControl`
-    - `BEGIN` (List): Additional GenICam parameters that are not be set at the beginning of the 'AcquisitionControl' section. Nested parameter list is evaluated in alphabetical order.
+    - `BEGIN` (List): Additional GenICam parameters that are to be set at the beginning of the 'AcquisitionControl' section. Nested parameter list is evaluated in alphabetical order.
     - `AcquisitionMode`* (String): Sets the acquisition mode of the device. Values possible: 'SingleFrame', 'MultiFrame', or 'Continuous'.
     - `AcquisitionFrameCount`* (Int): Number of frames to acquire in MultiFrame Acquisition mode. Only evaluated if 'AcquisitionMode' is 'MultiFrame'.
     - `ExposureMode`* (String): Sets the operation mode of the Exposure. Values possible: 'Off', 'Timed', 'TriggerWidth', or 'TriggerControlled'.
@@ -124,21 +127,25 @@ each packet for this stream channel.
     - `ExposureTime`* (Double): Sets the Exposure time when 'ExposureMode' is 'Timed' and 'ExposureAuto' is 'Off'.
     - `AcquisitionFrameRateEnable`* (Bool): Controls if the AcquisitionFrameRate feature is writable and used to control the acquisition rate.
     - `AcquisitionFrameRate`* (Double): Controls the acquisition rate (in Hertz) at which the frames are captured.
-    - `END` (List): Additional GenICam parameters that are not be set at the end of the 'AcquisitionControl' section. Nested parameter list is evaluated in alphabetical order.
+    - `END` (List): Additional GenICam parameters that are to be set at the end of the 'AcquisitionControl' section. Nested parameter list is evaluated in alphabetical order.
 - `AnalogControl`
-    - `BEGIN` (List): Additional GenICam parameters that are not be set at the beginning of the 'AcquisitionControl' section. Nested parameter list is evaluated in alphabetical order.
+    - `BEGIN` (List): Additional GenICam parameters that are to be set at the beginning of the 'AcquisitionControl' section. Nested parameter list is evaluated in alphabetical order.
     - `GainAuto`* (String): Sets the automatic gain control mode. Values possible: 'Off', 'Once', or 'Continuous'.
     - `Gain`* (List): Key-Value pairs of type string (key) and double (value) to set specific gain values in case 'GainAuto' is set to 'Off'. In this, the key will be set as value to the 'GainSelector' and the value will be set to the 'Gain' feature. The list is evaluated in alphabetical order.
     - `BlackLevelAuto`* (String): Controls the mode for automatic black level adjustment. Values possible: 'Off', 'Once', or 'Continuous'.
     - `BlackLevel`* (List): Key-Value pairs of type string (key) and double (value) to set specific black level values in case 'BlackLevelAuto' is set to 'Off'. In this, the key will be set as value to the 'BlackLevelSelector' and the value will be set to the 'BlackLevel' feature. The list is evaluated in alphabetical order.
     - `BalanceWhiteAuto`* (String): Controls the mode for automatic black level adjustment. Values possible: 'Off', 'Once', or 'Continuous'.
     - `BalanceRatio`* (List): Key-Value pairs of type string (key) and double (value) to set specific balance ratio values in case 'BalanceWhiteAuto' is set to 'Off'. In this, the key will be set as value to the 'BalanceRatioSelector' and the value will be set to the 'BalanceRatio' feature. The list is evaluated in alphabetical order.
-    - `END` (List): Additional GenICam parameters that are not be set at the end of the 'AcquisitionControl' section. Nested parameter list is evaluated in alphabetical order.
+    - `END` (List): Additional GenICam parameters that are to be set at the end of the 'AcquisitionControl' section. Nested parameter list is evaluated in alphabetical order.
 
 In the sections where a certain order of predefined parameters is considered and implemented, the user can specify a list of additional GenICam parameters nested underneath the parameter `BEGIN` and `END`, respectively, which are not explicitly evaluated as part of the list above. 
 This allows for the user to specify parameters which are not known to camera_aravis2. 
 Similar holds for the parameters within the 'DeviceControl' category.
-It is to be noted, however, that the nested parameters are evaluated in alphabetical order, which might lead to unintended behavior, depending on the camera device.
+
+**IMPORTANT**: It is to be noted, however, that the nested parameters are evaluated in alphabetical order, which might lead to unintended behavior, depending on the camera device.
+
+To force a manual order of some parameters use the prefix `#NN_` in the parameter name. That prefix will be removed but the alphabetical order of the params will be preserved.
+Image you have a parameter that needs to be preceded by another selector parameter, with these prefixes now you can use this features. See below for an example.
 
 The example values that are given in case of string parameters are given in accordance with the GenICam SNFC.
 The possible values might differ according to the actual implementation by the camera manufacturer.
@@ -172,7 +179,9 @@ While the parameters are evaluated by camera_aravis2 in the specific order which
                     },
                     "ImageFormatControl": {
                         "BEGIN": {
-                            "BinningSelector": "Digital"
+                            "BinningSelector": "Digital",
+                            "#2_ValueParamGoesSecond": 3.1416,
+                            "#1_SelectorParamGoesFirst": "pi",
                         },
                         "PixelFormat": "BayerRG8",
                         "Width": 1920,
@@ -310,7 +319,7 @@ colcon test-result --all
 
 *GigEVision Cameras Only*
 
-Some GigEVision cameras support the use of the Precision Time Protocol (PTP) to set the timestamps of the captured images. To activate and use it just set the launch parameter 'TransportLayerControl.PtpEnable' to 'True' as seen blow:
+Some GigEVision cameras support the use of the Precision Time Protocol (PTP) to set the timestamps of the captured images. To activate and use it just set the launch parameter 'TransportLayerControl.PtpEnable' to 'True' as seen below:
 
 ```Python
     ...
@@ -419,4 +428,5 @@ With camera_aravis for ROS1, the acquisition and publication of the image data o
 This helped to minimize unnecessary data transfer. 
 With the so-called [`matched-events`](https://docs.ros.org/en/foxy/Releases/Release-Iron-Irwini.html#matched-events), ROS Iron Irwini has introduced a functionality that allows to do the same. 
 However, the `image_transport` package for ROS Iron, which is used in `camera_aravis`, does not yet implement this feature.
-This feature is only available and implemented sinze ROS Jazzy Jalisco.
+This feature is only available and implemented since ROS Jazzy Jalisco.
+Since then, the acquisition runs as long as at least one subscriber is connected to the image topic (with any image transport) or to the camera_info topic.
