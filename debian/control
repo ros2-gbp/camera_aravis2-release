@@ -1,0 +1,12 @@
+Source: ros-lyrical-camera-aravis2
+Section: misc
+Priority: optional
+Maintainer: "Raphael Hagmanns" <raphael.hagmanns@iosb.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), libaravis-dev, libglib2.0-dev, libglib2.0-dev-bin, pkg-config, ros-lyrical-ament-cmake, ros-lyrical-ament-lint-auto <!nocheck>, ros-lyrical-ament-lint-common <!nocheck>, ros-lyrical-camera-aravis2-msgs, ros-lyrical-camera-info-manager, ros-lyrical-cv-bridge, ros-lyrical-diagnostic-msgs, ros-lyrical-image-transport, ros-lyrical-rclcpp, ros-lyrical-rclcpp-components, ros-lyrical-sensor-msgs, ros-lyrical-std-msgs, ros-lyrical-ros-workspace
+Homepage: https://index.ros.org/p/camera_aravis2/#lyrical
+Standards-Version: 3.9.2
+
+Package: ros-lyrical-camera-aravis2
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-lyrical-camera-aravis2-msgs, ros-lyrical-camera-info-manager, ros-lyrical-cv-bridge, ros-lyrical-diagnostic-msgs, ros-lyrical-image-transport, ros-lyrical-rclcpp, ros-lyrical-rclcpp-components, ros-lyrical-sensor-msgs, ros-lyrical-std-msgs, ros-lyrical-ros-workspace
+Description: ROS2 camera driver for [GenICam](https://www.emva.org/standards-technology/genicam/)-based GigEVision and USB3Vision cameras.
