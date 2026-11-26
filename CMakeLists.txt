@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 project(camera_aravis2)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
@@ -61,25 +61,20 @@ endif()
 
 set(LIBRARY_NAME ${PROJECT_NAME}_core)
 
-set(DEPENDENCIES
-  rclcpp
-  rclcpp_components
-  cv_bridge
-  image_transport
-  camera_info_manager
-  std_msgs
-  sensor_msgs
-  diagnostic_msgs
-  camera_aravis2_msgs
-)
-
 set(LIBRARIES
   ${ARAVIS_LIBRARIES}
   glib-2.0
   gmodule-2.0
   gobject-2.0
-  cv_bridge::cv_bridge
-  image_transport::image_transport
+  ${camera_aravis2_msgs_TARGETS}
+  ${diagnostic_msgs_TARGETS}
+  ${sensor_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  ${camera_info_manager_TARGETS}
+  ${cv_bridge_TARGETS}
+  ${image_transport_TARGETS}
+  ${rclcpp_TARGETS}
+  ${rclcpp_components_TARGETS}
   ${YAML_CPP_LIBRARY_DIRS}
 )
 
@@ -95,7 +90,6 @@ add_library(${LIBRARY_NAME} SHARED
 )
 target_link_libraries(${LIBRARY_NAME} ${LIBRARIES})
 target_compile_definitions(${LIBRARY_NAME} PRIVATE ${COMMON_COMPILE_DEFINITIONS})
-ament_target_dependencies(${LIBRARY_NAME} ${DEPENDENCIES})
 
 # camera_driver_gv node
 
