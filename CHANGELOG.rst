@@ -2,6 +2,15 @@
 Changelog for package camera_aravis2_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2026-11-26)
+------------------
+* refactor: modernize CMake for modern ROS compatibility
+
+1.2.0 (2026-03-09)
+------------------
+* other: add miguel as maintainer
+* Contributors: Miguel Granero
+
 1.1.0 (2024-12-12)
 ------------------
 * Update maintainer -> Raphael Hagmanns
