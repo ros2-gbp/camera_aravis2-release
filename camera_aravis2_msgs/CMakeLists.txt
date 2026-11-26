@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 project(camera_aravis2_msgs)
 
@@ -34,9 +34,9 @@ message(TRACE "Service files found: ${srv_files}")
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${srv_files}
-  DEPENDENCIES 
-  builtin_interfaces 
-  std_msgs 
+  DEPENDENCIES
+  builtin_interfaces
+  std_msgs
   sensor_msgs
   diagnostic_msgs
 )
