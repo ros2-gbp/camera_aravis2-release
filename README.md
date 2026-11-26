@@ -4,7 +4,7 @@ An actively maintained ROS 2 camera driver for [GenICam](https://www.emva.org/st
 It is a subsequent development of [camera_aravis](https://github.com/FraunhoferIOSB/camera_aravis), but in order to clean up some legacy code and, in turn, support new features mor easily, we opted to implement it with a new code-base. 
 It is open sourced under the 3-clause BSD license.
 
-It relies on the [Aravis](http://live.gnome.org/Aravis) library to access the GigEVision and USB3Vision cameras. 
+It relies on the [Aravis](https://github.com/aravisproject/aravis) library to access the GigEVision and USB3Vision cameras. 
 Aravis is a glib/gobject based library for video acquisition using GenICam cameras. 
 It currently implements the gigabit ethernet and USB3 protocols used by industrial cameras.
 
@@ -18,7 +18,7 @@ It currently implements the gigabit ethernet and USB3 protocols used by industri
 
 | Service    | devel  | main |
 | ---------- | ------- | ------ |
-| GitHub     | [![Humble Hawksbill](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml)<br>[![Iron Irwini](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml)<br>[![Jazzy Jalisco](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml)| [![Humble Hawksbill](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml)<br>[![Iron Irwini](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml)<br>[![Jazzy Jalisco](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml)|
+| GitHub     | [![Humble Hawksbill](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml)<br>[![Iron Irwini](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml)<br>[![Jazzy Jalisco](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml)<br>[![Kilted Kaiju](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_kilted.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_kilted.yml)<br>[![Lyrical Luth](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_lyrical.yml/badge.svg?branch=devel)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_lyrical.yml)| [![Humble Hawksbill](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_humble.yml)<br>[![Iron Irwini](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_iron.yml)<br>[![Jazzy Jalisco](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_jazzy.yml)<br>[![Kilted Kaiju](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_kilted.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_kilted.yml)<br>[![Lyrical Luth](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_lyrical.yml/badge.svg?branch=main)](https://github.com/FraunhoferIOSB/camera_aravis2/actions/workflows/build_and_test_lyrical.yml)|
 
 ------------------------
 
@@ -85,6 +85,9 @@ monitored. See '[How to publish camera diagnostics / status](#how-to-publish-cam
 - ```diagnostic_publish_rate```: Rate (in Hz) at which to read and publish the diagnostic data.
 	- Type: double
 	- Default: 0.1 (every 10 seconds)
+- ```timestamp_offset```: Offset (in seconds) added to the timestamp of the published image and camera_info messages, e.g. to compensate a constant delay or clock offset between the camera and other sensors. Can be changed at runtime.
+	- Type: double
+	- Default: 0.0
 
 #### GenICam-Specific Parameters
 
@@ -316,7 +319,7 @@ colcon test-result --all
 
 *GigEVision Cameras Only*
 
-Some GigEVision cameras support the use of the Precision Time Protocol (PTP) to set the timestamps of the captured images. To activate and use it just set the launch parameter 'TransportLayerControl.PtpEnable' to 'True' as seen blow:
+Some GigEVision cameras support the use of the Precision Time Protocol (PTP) to set the timestamps of the captured images. To activate and use it just set the launch parameter 'TransportLayerControl.PtpEnable' to 'True' as seen below:
 
 ```Python
     ...
@@ -425,4 +428,5 @@ With camera_aravis for ROS1, the acquisition and publication of the image data o
 This helped to minimize unnecessary data transfer. 
 With the so-called [`matched-events`](https://docs.ros.org/en/foxy/Releases/Release-Iron-Irwini.html#matched-events), ROS Iron Irwini has introduced a functionality that allows to do the same. 
 However, the `image_transport` package for ROS Iron, which is used in `camera_aravis`, does not yet implement this feature.
-This feature is only available and implemented sinze ROS Jazzy Jalisco.
+This feature is only available and implemented since ROS Jazzy Jalisco.
+Since then, the acquisition runs as long as at least one subscriber is connected to the image topic (with any image transport) or to the camera_info topic.
