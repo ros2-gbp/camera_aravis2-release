@@ -1,3 +1,28 @@
+## camera_aravis2 (lyrical) - 1.3.0-1
+
+The packages in the `camera_aravis2` repository were released into the `lyrical` distro by running `/usr/bin/bloom-release --new-track --rosdistro lyrical --track lyrical camera_aravis2` on `Thu, 26 Nov 2026 09:20:17 -0000`
+
+These packages were released:
+- `camera_aravis2`
+- `camera_aravis2_msgs`
+
+Version of package(s) in repository `camera_aravis2`:
+
+- upstream repository: https://github.com/FraunhoferIOSB/camera_aravis2.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `1.3.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.14.4`
+- catkin_pkg version: `1.1.1`
+- rosdep version: `0.27.0`
+- rosdistro version: `1.1.0`
+- vcstools version: `0.1.42`
+
+
 ## camera_aravis2 (kilted) - 1.3.0-1
 
 The packages in the `camera_aravis2` repository were released into the `kilted` distro by running `/usr/bin/bloom-release --rosdistro kilted camera_aravis2` on `Thu, 26 Nov 2026 09:19:15 -0000`
