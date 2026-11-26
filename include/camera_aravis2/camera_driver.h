@@ -34,6 +34,7 @@
 
 // Std
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -121,8 +122,11 @@ class CameraDriver : public CameraAravisNodeBase
         /// Conversion function to convert pixel format from sensor into image message.
         ConversionFunction cvt_pixel_format;
 
-        /// Camera publisher.
-        image_transport::CameraPublisher camera_pub;
+        /// Image publisher.
+        image_transport::Publisher image_pub;
+
+        /// Camera info publisher.
+        rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr p_camera_info_pub;
 
         /// Unique pointer to camera info manager.
         std::unique_ptr<camera_info_manager::CameraInfoManager> p_camera_info_manager;
@@ -391,21 +395,18 @@ class CameraDriver : public CameraAravisNodeBase
      */
     virtual void tuneArvStream(ArvStream* p_stream) const = 0;
 
-#ifdef WITH_MATCHED_EVENTS
     /**
      * @brief Handle change in message subscription.
      *
      * In this, the image acquisition will be started or stopped, depending on the number of
      * subscribers.
      *
-     * This is called each time there is a subscriber change to the image topic, even before the
-     * node is fully initialized. The stored number of subscribers is also evaluated during
-     * initialization in order to start acquisition, if applicable.
-     *
-     * @param[in] iEventInfo Info on matched event.
+     * This is called each time there is a subscriber change to the image or camera_info topic,
+     * even before the node is fully initialized. In that case nothing is done. It is also called
+     * at the end of the initialization, so that subscribers which connected earlier are
+     * considered as well.
      */
-    void handleMessageSubscriptionChange(rclcpp::MatchedInfo& iEventInfo);
-#endif
+    void handleMessageSubscriptionChange();
 
     /**
      * @brief Load and set up dynamic parameters.
@@ -556,6 +557,9 @@ class CameraDriver : public CameraAravisNodeBase
     /// List of the specified dynamic parameter names.
     std::vector<std::string> dynamic_parameters_names_;
 
+    /// Offset in seconds added to the timestamp of the published image messages.
+    double timestamp_offset_;
+
     /// Atomic flag, indicating if diagnostics are published.
     std::atomic<bool> is_diagnostics_published_;
 
@@ -567,6 +571,9 @@ class CameraDriver : public CameraAravisNodeBase
 
     /// Number of subscribers currently connected to the message topic.
     int current_num_subscribers_;
+
+    /// Mutex guarding the initialization flag and the acquisition state.
+    std::mutex acquisition_mutex_;
 
     /// YAML node holding diagnostic features
     YAML::Node diagnostic_features_;
